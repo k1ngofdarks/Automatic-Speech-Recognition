@@ -12,6 +12,7 @@ wandb
 comet_ml
 hydra-core
 
+wget
 black
 isort
 pre-commit
