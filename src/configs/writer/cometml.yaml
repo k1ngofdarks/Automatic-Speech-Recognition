@@ -1,5 +1,5 @@
 _target_: src.logger.CometMLWriter
-project_name: "pytorch_template_asr_example"
+project_name: "dla-asr"
 workspace: null
 run_name: "testing"
 mode: "online"

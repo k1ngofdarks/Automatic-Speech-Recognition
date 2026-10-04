@@ -1,6 +1,6 @@
 defaults:
   - model: baseline
-  - writer: wandb
+  - writer: cometml
   - metrics: example
   - datasets: example
   - dataloader: example
