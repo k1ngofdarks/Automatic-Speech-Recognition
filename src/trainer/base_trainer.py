@@ -126,6 +126,10 @@ class BaseTrainer:
             *[m.name for m in self.metrics["train"]],
             writer=self.writer,
         )
+        self.train_epoch_losses = MetricTracker(
+            *self.config.writer.loss_names,
+            writer=self.writer,
+        )
         self.evaluation_metrics = MetricTracker(
             *self.config.writer.loss_names,
             *[m.name for m in self.metrics["inference"]],
@@ -203,6 +207,7 @@ class BaseTrainer:
         self.is_train = True
         self.model.train()
         self.train_metrics.reset()
+        self.train_epoch_losses.reset()
         self.writer.set_epoch(epoch)
         self.writer.set_step((epoch - 1) * self.epoch_len)
         self.writer.add_scalar("epoch", epoch)
@@ -224,6 +229,12 @@ class BaseTrainer:
 
             self.train_metrics.update("grad_norm", self._get_grad_norm())
 
+            batch_size = batch["spectrogram"].shape[0]
+            for loss_name in self.config.writer.loss_names:
+                self.train_epoch_losses.update(
+                    loss_name, batch[loss_name].item(), n=batch_size
+                )
+
             # log current results
             if batch_idx % self.log_step == 0:
                 self.writer.set_step((epoch - 1) * self.epoch_len + batch_idx)
@@ -244,8 +255,13 @@ class BaseTrainer:
             if batch_idx + 1 >= self.epoch_len:
                 break
 
-        logs = last_train_metrics
+        epoch_losses = self.train_epoch_losses.result()
+        self.writer.set_step(epoch * self.epoch_len, mode="train")
+        for loss_name, value in epoch_losses.items():
+            self.writer.add_scalar(f"{loss_name}_epoch", value)
 
+        logs = last_train_metrics.copy()
+        logs.update(epoch_losses)
         # Run val/test
         for part, dataloader in self.evaluation_dataloaders.items():
             val_logs = self._evaluation_epoch(epoch, part, dataloader)
