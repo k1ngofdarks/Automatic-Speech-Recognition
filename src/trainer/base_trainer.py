@@ -203,6 +203,7 @@ class BaseTrainer:
         self.is_train = True
         self.model.train()
         self.train_metrics.reset()
+        self.writer.set_epoch(epoch)
         self.writer.set_step((epoch - 1) * self.epoch_len)
         self.writer.add_scalar("epoch", epoch)
         for batch_idx, batch in enumerate(
@@ -276,6 +277,7 @@ class BaseTrainer:
                     batch,
                     metrics=self.evaluation_metrics,
                 )
+            self.writer.set_epoch(epoch)
             self.writer.set_step(epoch * self.epoch_len, part)
             self._log_scalars(self.evaluation_metrics)
             self._log_batch(
