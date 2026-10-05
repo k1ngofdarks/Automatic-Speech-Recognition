@@ -23,13 +23,13 @@ class BaseDataset(Dataset):
     def __init__(
         self,
         index,
+        audio_pipeline,
         text_encoder=None,
         target_sr=16000,
         limit=None,
         max_audio_length=None,
         max_text_length=None,
         shuffle_index=False,
-        instance_transforms=None,
     ):
         """
         Args:
@@ -44,10 +44,14 @@ class BaseDataset(Dataset):
             max_test_length (int): maximum allowed text length.
             shuffle_index (bool): if True, shuffle the index. Uses python
                 random package with seed 42.
-            instance_transforms (dict[Callable] | None): transforms that
-                should be applied on the instance. Depend on the
-                tensor name.
+            audio_pipeline (AudioPipeline): audio pipeline for processing
+                audio and spectrogram.
         """
+        if audio_pipeline is None:
+            raise ValueError(
+                "Audio pipeline is not provided. Please provide an audio pipeline."
+            )
+
         self._assert_index_is_valid(index)
 
         index = self._filter_records_from_dataset(
@@ -61,7 +65,8 @@ class BaseDataset(Dataset):
 
         self.text_encoder = text_encoder
         self.target_sr = target_sr
-        self.instance_transforms = instance_transforms
+
+        self.audio_pipeline = audio_pipeline
 
     def __getitem__(self, ind):
         """
@@ -84,20 +89,15 @@ class BaseDataset(Dataset):
         text = data_dict["text"]
         text_encoded = self.text_encoder.encode(text)
 
-        spectrogram = self.get_spectrogram(audio)
+        processed = self.audio_pipeline(audio)
 
         instance_data = {
-            "audio": audio,
-            "spectrogram": spectrogram,
+            "audio": processed["audio"],
+            "spectrogram": processed["spectrogram"],
             "text": text,
             "text_encoded": text_encoded,
             "audio_path": audio_path,
         }
-
-        # TODO think of how to apply wave augs before calculating spectrogram
-        # Note: you may want to preserve both audio in time domain and
-        # in time-frequency domain for logging
-        instance_data = self.preprocess_data(instance_data)
 
         return instance_data
 
@@ -114,41 +114,6 @@ class BaseDataset(Dataset):
         if sr != target_sr:
             audio_tensor = torchaudio.functional.resample(audio_tensor, sr, target_sr)
         return audio_tensor
-
-    def get_spectrogram(self, audio):
-        """
-        Special instance transform with a special key to
-        get spectrogram from audio.
-
-        Args:
-            audio (Tensor): original audio.
-        Returns:
-            spectrogram (Tensor): spectrogram for the audio.
-        """
-        return self.instance_transforms["get_spectrogram"](audio)
-
-    def preprocess_data(self, instance_data):
-        """
-        Preprocess data with instance transforms.
-
-        Each tensor in a dict undergoes its own transform defined by the key.
-
-        Args:
-            instance_data (dict): dict, containing instance
-                (a single dataset element).
-        Returns:
-            instance_data (dict): dict, containing instance
-                (a single dataset element) (possibly transformed via
-                instance transform).
-        """
-        if self.instance_transforms is not None:
-            for transform_name in self.instance_transforms.keys():
-                if transform_name == "get_spectrogram":
-                    continue  # skip special key
-                instance_data[transform_name] = self.instance_transforms[
-                    transform_name
-                ](instance_data[transform_name])
-        return instance_data
 
     @staticmethod
     def _filter_records_from_dataset(

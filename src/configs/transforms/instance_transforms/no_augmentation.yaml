@@ -3,10 +3,7 @@ train:
   feature_extractor:
     _target_: torchaudio.transforms.MelSpectrogram
     sample_rate: 16000
-  wave_transforms:
-    _target_: torchvision.transforms.v2.Compose
-    transforms:
-      - _target_: src.transforms.wav_augs.Gain
+  wave_transforms: null
   spectrogram_transforms: null
 inference:
   _target_: src.transforms.audio_pipeline.AudioPipeline
