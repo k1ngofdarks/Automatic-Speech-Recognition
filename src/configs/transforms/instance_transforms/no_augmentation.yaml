@@ -3,6 +3,7 @@ train:
   feature_extractor:
     _target_: torchaudio.transforms.MelSpectrogram
     sample_rate: 16000
+    n_mels: 128
   wave_transforms: null
   spectrogram_transforms: null
 inference:
@@ -10,5 +11,6 @@ inference:
   feature_extractor:
     _target_: torchaudio.transforms.MelSpectrogram
     sample_rate: 16000
+    n_mels: 128
   wave_transforms: null
   spectrogram_transforms: null
