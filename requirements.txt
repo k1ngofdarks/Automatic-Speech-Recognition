@@ -5,6 +5,7 @@ torchcodec==0.17.0
 datasets
 soundfile
 numpy==2.1.3
+scipy
 torch_audiomentations
 tqdm
 matplotlib
