@@ -1,0 +1,10 @@
+_target_: src.model.ConformerModel
+n_feats: ${transforms.instance_transforms.train.feature_extractor.n_mels}
+input_dim: 144
+num_heads: 4
+ffn_dim: 576
+num_layers: 16
+depthwise_conv_kernel_size: 31
+dropout: 0.1
+use_group_norm: False
+convolution_first: False
