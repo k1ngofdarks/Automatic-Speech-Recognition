@@ -2,6 +2,40 @@ from torch import nn
 from torchaudio.models.conformer import Conformer
 
 
+class ConvSubsampling(nn.Module):
+    """
+    Convolutional subsampling module from torchaudio.
+    """
+
+    def __init__(self, n_feats: int, d_model: int):
+        super().__init__()
+        self.conv = nn.Sequential(
+            nn.Conv2d(1, d_model, kernel_size=3, stride=2),
+            nn.ReLU(),
+            nn.Conv2d(d_model, d_model, kernel_size=3, stride=2),
+            nn.ReLU(),
+        )
+        out_freq = (n_feats - 3) // 2 + 1
+        out_freq = (out_freq - 3) // 2 + 1
+        out_dim = d_model * out_freq
+        self.out = nn.Linear(out_dim, d_model)
+
+    def recalculate_output_lengths(self, input_lengths):
+        output_lengths = (input_lengths - 3) // 2 + 1
+        output_lengths = (output_lengths - 3) // 2 + 1
+        return output_lengths
+
+    def forward(self, x, x_lengths):
+        x = x.unsqueeze(1)
+        x = self.conv(x)
+        B, C, T, F = x.shape
+        x = x.permute(0, 2, 1, 3)
+        x = x.reshape(B, T, C * F)
+        x = self.out(x)
+        x_lengths = self.recalculate_output_lengths(x_lengths)
+        return x, x_lengths
+
+
 class ConformerModel(nn.Module):
     """
     Conformer model from torchaudio.
@@ -22,7 +56,9 @@ class ConformerModel(nn.Module):
     ):
         super().__init__()
 
-        self.proj = nn.Linear(in_features=n_feats, out_features=input_dim)
+        self.subsampling = ConvSubsampling(n_feats=n_feats, d_model=input_dim)
+
+        self.drop = nn.Dropout(p=dropout)
 
         self.net = Conformer(
             input_dim=input_dim,
@@ -48,7 +84,10 @@ class ConformerModel(nn.Module):
             output (dict): output dict containing log_probs and
                 transformed lengths.
         """
-        spectrogram = self.proj(spectrogram.transpose(1, 2))
+        spectrogram, spectrogram_length = self.subsampling(
+            spectrogram.transpose(1, 2), spectrogram_length
+        )
+        spectrogram = self.drop(spectrogram)
         features, output_lengths = self.net(
             spectrogram, spectrogram_length.to(spectrogram.device)
         )
