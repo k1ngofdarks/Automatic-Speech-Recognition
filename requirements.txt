@@ -6,6 +6,7 @@ datasets
 soundfile
 numpy==2.1.3
 scipy
+sentencepiece
 torch_audiomentations
 tqdm
 matplotlib
