@@ -2,6 +2,21 @@ import torch
 from torch import nn
 
 
+class LogMel(nn.Module):
+    """
+    Log-Mel module.
+    """
+
+    def __init__(self, eps: float = 1e-5):
+        super().__init__()
+        self.eps = eps
+
+    def forward(self, spectrogram: torch.Tensor) -> torch.Tensor:
+        spectrogram = torch.log(spectrogram.clamp_min(self.eps))
+
+        return spectrogram
+
+
 class LogMelNormalization(nn.Module):
     """
     Log-Mel normalization module.
