@@ -2,6 +2,7 @@ import logging
 import random
 
 import numpy as np
+import soundfile as sf
 import torch
 import torchaudio
 from torch.utils.data import Dataset
@@ -108,8 +109,8 @@ class BaseDataset(Dataset):
         return len(self._index)
 
     def load_audio(self, path):
-        audio_tensor, sr = torchaudio.load(path)
-        audio_tensor = audio_tensor[0:1, :]  # remove all channels but the first
+        audio, sr = sf.read(path, dtype="float32", always_2d=True)
+        audio_tensor = torch.from_numpy(audio.T[:1].copy())
         target_sr = self.target_sr
         if sr != target_sr:
             audio_tensor = torchaudio.functional.resample(audio_tensor, sr, target_sr)
