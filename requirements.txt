@@ -1,7 +1,6 @@
 torch==2.11.0
 torchvision==0.26.0
 torchaudio==2.11.0
-torchcodec==0.17.0
 datasets
 soundfile
 numpy==2.1.3
