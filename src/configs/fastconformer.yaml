@@ -1,0 +1,51 @@
+defaults:
+  - model: fastconformer_baseline
+  - writer: cometml
+  - metrics: example
+  - datasets: train_clean_100
+  - dataloader: conformer_dataloader
+  - transforms: conformer
+  - _self_
+
+dataloader:
+  batch_size: 16
+
+writer:
+  run_name: "fastconformer_tc100"
+
+optimizer:
+  _target_: torch.optim.AdamW
+  lr: 3e-4
+
+lr_scheduler:
+  _target_: torch.optim.lr_scheduler.OneCycleLR
+  max_lr: 3e-4
+  pct_start: 0.1
+  steps_per_epoch: ${trainer.epoch_len}
+  epochs: ${trainer.n_epochs}
+  anneal_strategy: cos
+
+loss_function:
+  _target_: src.loss.CTCLossWrapper
+  zero_infinity: true
+
+text_encoder:
+  _target_: src.text_encoder.BPECTCTextEncoder
+  model_file_path: "data/tokenizers/train-clean-100/bpe-256/tokenizer.model"
+
+trainer:
+  log_step: 25
+  n_epochs: 10
+  # Use the full training DataLoader for each epoch.
+  epoch_len: null
+  device_tensors: ["spectrogram", "text_encoded"] # which tensors should be on device (ex. GPU)
+  resume_from: null # null or path to the checkpoint dir with *.pth and config.yaml
+  device: auto # device name or "auto"
+  override: False # if True, will override the previous run with the same name
+  monitor: "off" # save numbered checkpoints after every epoch
+  save_period: 1 # checkpoint after each completed epoch
+  early_stop: ${trainer.n_epochs} # epochs for early stopping
+  max_grad_norm: 5.0
+  skip_oom: false
+  save_dir: "saved"
+  seed: 1
