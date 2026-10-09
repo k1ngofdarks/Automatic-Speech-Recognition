@@ -101,7 +101,10 @@ ENV/
 .mypy_cache/
 
 # input data, saved log, checkpoints, hydra outputs
-data/
+/data/*
+!/data/tokenizers/
+/data/tokenizers/**/corpus.txt
+
 input/
 saved/
 wandb/
