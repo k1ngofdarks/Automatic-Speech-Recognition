@@ -1,0 +1,12 @@
+_target_: src.model.FastConformerModel
+n_feats: ${transforms.instance_transforms.train.feature_extractor.n_mels}
+input_dim: 144
+num_heads: 4
+ffn_dim: 576
+num_layers: 16
+depthwise_conv_kernel_size: 9
+subsampling_factor: 8
+conv_channels: ${.input_dim}
+dropout: 0.1
+use_group_norm: False
+convolution_first: False
