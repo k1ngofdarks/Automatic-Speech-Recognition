@@ -1,0 +1,14 @@
+defaults:
+  - baseline
+  - _self_
+
+train:
+  spectrogram_transforms:
+    _target_: torch.nn.Sequential
+    _args_:
+      - _target_: src.transforms.spec_augs.LogMelNormalization
+        eps: 1.0e-5
+      - _target_: torchaudio.transforms.TimeMasking
+        time_mask_param: 50
+        iid_masks: true
+        p: 0.1

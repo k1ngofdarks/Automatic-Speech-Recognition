@@ -1,0 +1,16 @@
+defaults:
+  - baseline
+  - _self_
+
+train:
+  wave_transforms:
+    _target_: torch.nn.Sequential
+    _args_:
+      - _target_: src.transforms.wav_augs.SpeedPerturbation
+        sample_rate: 16000
+        factors: [0.9, 1.0, 1.1]
+  spectrogram_transforms:
+    _target_: torch.nn.Sequential
+    _args_:
+      - _target_: src.transforms.spec_augs.LogMelNormalization
+        eps: 1.0e-5

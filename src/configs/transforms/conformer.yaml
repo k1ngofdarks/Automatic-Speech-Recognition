@@ -1,35 +1,4 @@
-instance_transforms:
-  train:
-    _target_: src.transforms.audio_pipeline.AudioPipeline
-    feature_extractor:
-      _target_: torchaudio.transforms.MelSpectrogram
-      sample_rate: 16000
-      n_mels: 128
-      n_fft: 1024
-      win_length: 400
-      hop_length: 160
-    wave_transforms: null
-    spectrogram_transforms:
-      _target_: torch.nn.Sequential
-      _args_:
-        - _target_: src.transforms.spec_augs.LogMelNormalization
-          eps: 1.0e-5
-  inference:
-    _target_: src.transforms.audio_pipeline.AudioPipeline
-    feature_extractor:
-      _target_: torchaudio.transforms.MelSpectrogram
-      sample_rate: 16000
-      n_mels: 128
-      n_fft: 1024
-      win_length: 400
-      hop_length: 160
-    wave_transforms: null
-    spectrogram_transforms:
-      _target_: torch.nn.Sequential
-      _args_:
-        - _target_: src.transforms.spec_augs.LogMelNormalization
-          eps: 1.0e-5
-
-batch_transforms:
-  train: null
-  inference: null
+defaults:
+  - instance_transforms: baseline
+  - batch_transforms: no_transforms
+  - _self_
