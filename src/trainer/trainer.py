@@ -57,6 +57,20 @@ class Trainer(BaseTrainer):
         for loss_name in self.config.writer.loss_names:
             metrics.update(loss_name, batch[loss_name].item())
 
+        if metric_funcs is not None:
+            log_probs = batch["log_probs"]
+            log_probs_length = batch["log_probs_length"]
+            argmax_inds = log_probs.cpu().argmax(-1).numpy()
+            argmax_inds = [
+                inds[: int(ind_len)]
+                for inds, ind_len in zip(argmax_inds, log_probs_length.numpy())
+            ]
+            predictions = [self.text_encoder.ctc_decode(inds) for inds in argmax_inds]
+            batch[
+                "predictions"
+            ] = predictions  # TODO: add calc predictions to BaseTrainer
+            # "predictions" key is used in metrics, so it should be added to the batch
+
         for met in metric_funcs:
             metrics.update(met.name, met(**batch))
         return batch
