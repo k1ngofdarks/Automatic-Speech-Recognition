@@ -31,6 +31,7 @@ class BaseDataset(Dataset):
         max_audio_length=None,
         max_text_length=None,
         shuffle_index=False,
+        require_text=True,
     ):
         """
         Args:
@@ -42,21 +43,25 @@ class BaseDataset(Dataset):
             limit (int | None): if not None, limit the total number of elements
                 in the dataset to 'limit' elements.
             max_audio_length (int): maximum allowed audio length.
-            max_test_length (int): maximum allowed text length.
+            max_text_length (int): maximum allowed text length.
             shuffle_index (bool): if True, shuffle the index. Uses python
                 random package with seed 42.
             audio_pipeline (AudioPipeline): audio pipeline for processing
                 audio and spectrogram.
+            require_text (bool): if True, require text in the index. If False,
+                text is not required in the index (need for datasets without text).
         """
         if audio_pipeline is None:
             raise ValueError(
                 "Audio pipeline is not provided. Please provide an audio pipeline."
             )
 
-        self._assert_index_is_valid(index)
+        self.require_text = require_text
+
+        self._assert_index_is_valid(require_text, index)
 
         index = self._filter_records_from_dataset(
-            index, max_audio_length, max_text_length
+            require_text, index, max_audio_length, max_text_length
         )
         index = self._shuffle_and_limit_index(index, limit, shuffle_index)
         if not shuffle_index:
@@ -87,8 +92,17 @@ class BaseDataset(Dataset):
         data_dict = self._index[ind]
         audio_path = data_dict["path"]
         audio = self.load_audio(audio_path)
-        text = data_dict["text"]
-        text_encoded = self.text_encoder.encode(text)
+
+        if "text" in data_dict:
+            text = data_dict["text"]
+            text_encoded = self.text_encoder.encode(text)
+        else:
+            if self.require_text:
+                raise KeyError(
+                    "Text is required for this dataset, but it is not provided in the index."
+                )
+            text = None
+            text_encoded = None
 
         processed = self.audio_pipeline(audio)
 
@@ -124,7 +138,7 @@ class BaseDataset(Dataset):
     ) -> list:
         """
         Filter some of the elements from the dataset depending on
-        the desired max_test_length or max_audio_length.
+        the desired max_text_length or max_audio_length.
 
         Args:
             index (list[dict]): list, containing dict for each element of
@@ -152,6 +166,10 @@ class BaseDataset(Dataset):
 
         initial_size = len(index)
         if max_text_length is not None:
+            if not all("text" in el for el in index):
+                raise ValueError(
+                    "max_text_length requires transcriptions for all dataset items."
+                )
             exceeds_text_length = (
                 np.array(
                     [len(CTCTextEncoder.normalize_text(el["text"])) for el in index]
@@ -178,12 +196,14 @@ class BaseDataset(Dataset):
         return index
 
     @staticmethod
-    def _assert_index_is_valid(index):
+    def _assert_index_is_valid(require_text, index):
         """
         Check the structure of the index and ensure it satisfies the desired
         conditions.
 
         Args:
+            require_text (bool): if True, require text in the index. If False,
+                text is not required in the index.
             index (list[dict]): list, containing dict for each element of
                 the dataset. The dict has required metadata information,
                 such as label and object path.
@@ -192,10 +212,11 @@ class BaseDataset(Dataset):
             assert "path" in entry, (
                 "Each dataset item should include field 'path'" " - path to audio file."
             )
-            assert "text" in entry, (
-                "Each dataset item should include field 'text'"
-                " - object ground-truth transcription."
-            )
+            if require_text:
+                assert "text" in entry, (
+                    "Each dataset item should include field 'text'"
+                    " - object ground-truth transcription."
+                )
             assert "audio_len" in entry, (
                 "Each dataset item should include field 'audio_len'"
                 " - length of the audio."
