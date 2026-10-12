@@ -10,7 +10,7 @@ class CustomDirAudioDataset(BaseDataset):
         data = []
         for path in Path(audio_dir).iterdir():
             entry = {}
-            if path.suffix in [".mp3", ".wav", ".flac", ".m4a"]:
+            if path.suffix in [".mp3", ".wav", ".flac"]:
                 entry["path"] = str(path)
 
                 info = sf.info(str(path))
