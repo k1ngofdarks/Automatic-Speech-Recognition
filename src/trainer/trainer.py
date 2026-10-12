@@ -57,7 +57,7 @@ class Trainer(BaseTrainer):
         for loss_name in self.config.writer.loss_names:
             metrics.update(loss_name, batch[loss_name].item())
 
-        if metric_funcs is not None:
+        if metric_funcs:
             log_probs = batch["log_probs"]
             log_probs_length = batch["log_probs_length"]
             argmax_inds = log_probs.cpu().argmax(-1).numpy()
