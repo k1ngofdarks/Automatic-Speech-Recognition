@@ -15,7 +15,28 @@ def collate_fn(dataset_items: list[dict]):
             of the tensors.
     """
 
-    texts = [item["text"] for item in dataset_items]
+    has_targets = [item["text_encoded"] is not None for item in dataset_items]
+    text_exists = all(has_targets)
+
+    if any(has_targets) and not text_exists:
+        raise ValueError("Batch contains both labeled and unlabeled items")
+
+    if text_exists:
+        texts = [item["text"] for item in dataset_items]
+        texts_encoded = [item["text_encoded"] for item in dataset_items]
+        texts_encoded_length = [text.shape[-1] for text in texts_encoded]
+
+        L_max = max(texts_encoded_length)
+        text_encoded_padded = [
+            F.pad(text, (0, L_max - text.shape[-1])) for text in texts_encoded
+        ]
+        texts_encoded = torch.cat(text_encoded_padded, dim=0)
+        texts_encoded_length = torch.tensor(texts_encoded_length, dtype=torch.long)
+    else:
+        texts = None
+        texts_encoded = None
+        texts_encoded_length = None
+
     audios = [item["audio"] for item in dataset_items]
     audio_paths = [item["audio_path"] for item in dataset_items]
 
@@ -26,16 +47,6 @@ def collate_fn(dataset_items: list[dict]):
     spectrogram_padded = [F.pad(spec, (0, T_max - spec.shape[-1])) for spec in specs]
     spectrograms = torch.cat(spectrogram_padded, dim=0)
     spectrograms_length = torch.tensor(specs_length, dtype=torch.long)
-
-    texts_encoded = [item["text_encoded"] for item in dataset_items]
-    texts_encoded_length = [text.shape[-1] for text in texts_encoded]
-
-    L_max = max(texts_encoded_length)
-    text_encoded_padded = [
-        F.pad(text, (0, L_max - text.shape[-1])) for text in texts_encoded
-    ]
-    texts_encoded = torch.cat(text_encoded_padded, dim=0)
-    texts_encoded_length = torch.tensor(texts_encoded_length, dtype=torch.long)
 
     return {
         "text": texts,
