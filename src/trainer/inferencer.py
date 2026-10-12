@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import torch
 from tqdm.auto import tqdm
 
@@ -129,33 +131,28 @@ class Inferencer(BaseTrainer):
         outputs = self.model(**batch)
         batch.update(outputs)
 
-        if metrics is not None:
-            for met in self.metrics["inference"]:
-                metrics.update(met.name, met(**batch))
-
-        # Some saving logic. This is an example
-        # Use if you need to save predictions on disk
-
-        batch_size = batch["logits"].shape[0]
-        current_id = batch_idx * batch_size
+        batch_size = batch["log_probs"].shape[0]
+        predictions = []
 
         for i in range(batch_size):
-            # clone because of
-            # https://github.com/pytorch/pytorch/issues/1995
-            logits = batch["logits"][i].clone()
-            label = batch["labels"][i].clone()
-            pred_label = logits.argmax(dim=-1)
+            log_prob_length = int(batch["log_probs_length"][i])
+            log_prob = batch["log_probs"][i, :log_prob_length]
 
-            output_id = current_id + i
+            argmax_inds = log_prob.argmax(-1).cpu().tolist()
+            prediction_text = self.text_encoder.ctc_decode(argmax_inds)
 
-            output = {
-                "pred_label": pred_label,
-                "label": label,
-            }
+            audio_path = batch["audio_path"][i]
 
             if self.save_path is not None:
-                # you can use safetensors or other lib here
-                torch.save(output, self.save_path / part / f"output_{output_id}.pth")
+                output_path = self.save_path / part / f"{Path(audio_path).stem}.txt"
+                output_path.write_text(prediction_text)
+            predictions.append(prediction_text)
+
+        batch["predictions"] = predictions  # TODO: add calc predictions to BaseTrainer
+
+        if metrics is not None and batch.get("text") is not None:
+            for met in self.metrics["inference"]:
+                metrics.update(met.name, met(**batch))
 
         return batch
 
@@ -173,7 +170,9 @@ class Inferencer(BaseTrainer):
         self.is_train = False
         self.model.eval()
 
-        self.evaluation_metrics.reset()
+        metrics_updated = False
+        if self.metrics is not None:
+            self.evaluation_metrics.reset()
 
         # create Save dir
         if self.save_path is not None:
@@ -192,4 +191,13 @@ class Inferencer(BaseTrainer):
                     metrics=self.evaluation_metrics,
                 )
 
-        return self.evaluation_metrics.result()
+                if (
+                    self.evaluation_metrics is not None
+                    and batch.get("text") is not None
+                ):
+                    metrics_updated = True
+
+        if metrics_updated:
+            return self.evaluation_metrics.result()
+        else:
+            return {}
