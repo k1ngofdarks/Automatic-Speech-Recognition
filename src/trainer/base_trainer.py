@@ -64,6 +64,8 @@ class BaseTrainer:
 
         self.device = device
         self.skip_oom = skip_oom
+        self.use_amp = self.cfg_trainer.get("use_amp", False) and self.device != "cpu"
+        self.scaler = torch.amp.GradScaler("cuda", enabled=self.use_amp)
 
         self.logger = logger
         self.log_step = config.trainer.get("log_step", 50)
@@ -492,6 +494,7 @@ class BaseTrainer:
             "lr_scheduler": self.lr_scheduler.state_dict(),
             "monitor_best": self.mnt_best,
             "config": self.config,
+            "scaler": self.scaler.state_dict(),
         }
         filename = str(self.checkpoint_dir / f"checkpoint-epoch{epoch}.pth")
         if not (only_best and save_best):
@@ -547,6 +550,8 @@ class BaseTrainer:
         else:
             self.optimizer.load_state_dict(checkpoint["optimizer"])
             self.lr_scheduler.load_state_dict(checkpoint["lr_scheduler"])
+            if self.use_amp and checkpoint.get("scaler"):
+                self.scaler.load_state_dict(checkpoint["scaler"])
 
         self.logger.info(
             f"Checkpoint loaded. Resume training from epoch {self.start_epoch}"
