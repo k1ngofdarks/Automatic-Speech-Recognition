@@ -1,0 +1,10 @@
+val:
+  _target_: src.datasets.LibrispeechDataset
+  part: "dev-other"
+  target_sr: 16000
+  audio_pipeline: ${transforms.instance_transforms.inference}
+test:
+  _target_: src.datasets.LibrispeechDataset
+  part: "test-other"
+  target_sr: 16000
+  audio_pipeline: ${transforms.instance_transforms.inference}
