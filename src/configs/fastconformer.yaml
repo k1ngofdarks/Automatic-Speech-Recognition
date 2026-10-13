@@ -34,8 +34,9 @@ text_encoder:
   model_file_path: "data/tokenizers/train-clean-100/bpe-256/tokenizer.model"
 
 trainer:
-  log_step: 25
+  log_step: 100
   n_epochs: 10
+  use_amp: true
   # Use the full training DataLoader for each epoch.
   epoch_len: null
   device_tensors: ["spectrogram", "text_encoded"] # which tensors should be on device (ex. GPU)
