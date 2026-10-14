@@ -23,6 +23,7 @@ class Inferencer(BaseTrainer):
         device,
         dataloaders,
         text_encoder,
+        decoder,
         save_path,
         metrics=None,
         batch_transforms=None,
@@ -64,6 +65,7 @@ class Inferencer(BaseTrainer):
         self.batch_transforms = batch_transforms
 
         self.text_encoder = text_encoder
+        self.decoder = decoder
 
         # define dataloaders
         self.evaluation_dataloaders = {k: v for k, v in dataloaders.items()}
@@ -131,24 +133,16 @@ class Inferencer(BaseTrainer):
         outputs = self.model(**batch)
         batch.update(outputs)
 
-        batch_size = batch["log_probs"].shape[0]
-        predictions = []
+        batch["predictions"] = self.decoder.decode(
+            batch["log_probs"], batch["log_probs_length"]
+        )
 
-        for i in range(batch_size):
-            log_prob_length = int(batch["log_probs_length"][i])
-            log_prob = batch["log_probs"][i, :log_prob_length]
-
-            argmax_inds = log_prob.argmax(-1).cpu().tolist()
-            prediction_text = self.text_encoder.ctc_decode(argmax_inds)
-
-            audio_path = batch["audio_path"][i]
-
-            if self.save_path is not None:
+        if self.save_path is not None:
+            for audio_path, prediction_text in zip(
+                batch["audio_path"], batch["predictions"]
+            ):
                 output_path = self.save_path / part / f"{Path(audio_path).stem}.txt"
                 output_path.write_text(prediction_text)
-            predictions.append(prediction_text)
-
-        batch["predictions"] = predictions  # TODO: add calc predictions to BaseTrainer
 
         if metrics is not None and batch.get("text") is not None:
             for met in self.metrics["inference"]:
