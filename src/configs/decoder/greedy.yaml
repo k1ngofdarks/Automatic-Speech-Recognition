@@ -1,0 +1,2 @@
+_target_: src.decode.GreedyCTCDecoder
+text_encoder: ${text_encoder}
