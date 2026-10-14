@@ -69,19 +69,11 @@ class Trainer(BaseTrainer):
         for loss_name in self.config.writer.loss_names:
             metrics.update(loss_name, batch[loss_name].item())
 
-        if metric_funcs:
-            log_probs = batch["log_probs"]
-            log_probs_length = batch["log_probs_length"]
-            argmax_inds = log_probs.cpu().argmax(-1).numpy()
-            argmax_inds = [
-                inds[: int(ind_len)]
-                for inds, ind_len in zip(argmax_inds, log_probs_length.numpy())
-            ]
-            predictions = [self.text_encoder.ctc_decode(inds) for inds in argmax_inds]
-            batch[
-                "predictions"
-            ] = predictions  # TODO: add calc predictions to BaseTrainer
-            # "predictions" key is used in metrics, so it should be added to the batch
+        if metric_funcs or not self.is_train:
+            batch["predictions"] = self.decoder.decode(
+                batch["log_probs"], batch["log_probs_length"]
+            )
+            # "predictions" key is used in metrics and inference (logging), so it should be added to the batch
 
         for met in metric_funcs:
             metrics.update(met.name, met(**batch))
@@ -116,7 +108,14 @@ class Trainer(BaseTrainer):
         self.writer.add_image("spectrogram", image)
 
     def log_predictions(
-        self, text, log_probs, log_probs_length, audio_path, examples_to_log=10, **batch
+        self,
+        text,
+        predictions,
+        log_probs,
+        log_probs_length,
+        audio_path,
+        examples_to_log=10,
+        **batch
     ):
         # TODO add beam search
         # Note: by improving text encoder and metrics design
@@ -128,8 +127,7 @@ class Trainer(BaseTrainer):
             for inds, ind_len in zip(argmax_inds, log_probs_length.numpy())
         ]
         argmax_texts_raw = [self.text_encoder.decode(inds) for inds in argmax_inds]
-        argmax_texts = [self.text_encoder.ctc_decode(inds) for inds in argmax_inds]
-        tuples = list(zip(argmax_texts, text, argmax_texts_raw, audio_path))
+        tuples = list(zip(predictions, text, argmax_texts_raw, audio_path))
 
         rows = {}
         for pred, target, raw_pred, audio_path in tuples[:examples_to_log]:

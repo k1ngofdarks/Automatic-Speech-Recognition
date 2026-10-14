@@ -36,6 +36,9 @@ def main(config):
     # setup text_encoder
     text_encoder = instantiate(config.text_encoder)
 
+    # setup model decoder
+    decoder = instantiate(config.decoder, text_encoder=text_encoder)
+
     # setup data_loader instances
     # batch_transforms should be put on device
     dataloaders, batch_transforms = get_dataloaders(config, text_encoder, device)
@@ -79,6 +82,7 @@ def main(config):
         optimizer=optimizer,
         lr_scheduler=lr_scheduler,
         text_encoder=text_encoder,
+        decoder=decoder,
         config=config,
         device=device,
         dataloaders=dataloaders,
