@@ -5,6 +5,7 @@ defaults:
   - datasets: train_clean_100
   - dataloader: conformer_dataloader
   - transforms: conformer
+  - decoder: greedy
   - _self_
 
 dataloader:

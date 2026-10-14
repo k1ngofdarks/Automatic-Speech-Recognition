@@ -1,13 +1,21 @@
 defaults:
-  - model: baseline
+  - model: conformer_baseline
   - metrics: example
-  - datasets: example_eval # we do not want to run inference on training data
-  - dataloader: example
-  - transforms: example
+  - datasets: other_eval
+  - dataloader: conformer_dataloader
+  - transforms: conformer
+  - decoder: greedy
   - _self_
+
+text_encoder:
+  _target_: src.text_encoder.CTCTextEncoder
+
+dataloader:
+  batch_size: 1
+
 inferencer:
-  device_tensors: ["data_object", "labels"] # which tensors should be on device (ex. GPU)
-  device: auto # device name or "auto"
-  save_path: "example" # any name here, can be a dataset name
+  device_tensors: ["spectrogram"]
+  device: auto
+  save_path: "path/to/save/inference/results"
   seed: 1
-  from_pretrained: "saved/model_best.pth" # path to the pretrained model
+  from_pretrained: paths/to/your/pretrained/model.pth
