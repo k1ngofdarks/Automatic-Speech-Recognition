@@ -1,2 +1,2 @@
-from src.metrics.cer import ArgmaxCERMetric
-from src.metrics.wer import ArgmaxWERMetric
+from src.metrics.cer import ArgmaxCERMetric, CorpusCERMetric
+from src.metrics.wer import ArgmaxWERMetric, CorpusWERMetric
