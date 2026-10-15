@@ -1,9 +1,9 @@
 train: [] # metrics that are calculated during training
 inference: # metrics that are calculated during inference (eval)
-  - _target_: src.metrics.ArgmaxCERMetric
+  - _target_: src.metrics.CERMetric
     name: "CER_(Beam)" # it is better to avoid spaces in names
     decoder_key: beam # Key in config.decoders and batch["predictions"], e.g. "greedy" or "beam"
-  - _target_: src.metrics.ArgmaxWERMetric
+  - _target_: src.metrics.WERMetric
     name: "WER_(Beam)"
     decoder_key: beam
   - _target_: src.metrics.CorpusCERMetric
