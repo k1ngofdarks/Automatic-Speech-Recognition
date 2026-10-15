@@ -70,10 +70,11 @@ class Trainer(BaseTrainer):
             metrics.update(loss_name, batch[loss_name].item())
 
         if metric_funcs or not self.is_train:
-            batch["predictions"] = self.decoder.decode(
-                batch["log_probs"], batch["log_probs_length"]
-            )
-            # "predictions" key is used in metrics and inference (logging), so it should be added to the batch
+            batch["predictions"] = {
+                name: decoder.decode(batch["log_probs"], batch["log_probs_length"])
+                for name, decoder in self.decoders.items()
+            }
+            # batch["predictions"][decoder_key] is used in metrics and inference (logging)
 
         for met in metric_funcs:
             metrics.update(met.name, **met(**batch))

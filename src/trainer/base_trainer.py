@@ -23,7 +23,7 @@ class BaseTrainer:
         optimizer,
         lr_scheduler,
         text_encoder,
-        decoder,
+        decoders,
         config,
         device,
         dataloaders,
@@ -76,7 +76,7 @@ class BaseTrainer:
         self.optimizer = optimizer
         self.lr_scheduler = lr_scheduler
         self.text_encoder = text_encoder
-        self.decoder = decoder
+        self.decoders = decoders
         self.batch_transforms = batch_transforms
 
         # define dataloaders

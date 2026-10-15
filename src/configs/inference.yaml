@@ -4,7 +4,7 @@ defaults:
   - datasets: other_eval
   - dataloader: conformer_dataloader
   - transforms: conformer
-  - decoder: greedy
+  - decoders: greedy
   - _self_
 
 text_encoder:

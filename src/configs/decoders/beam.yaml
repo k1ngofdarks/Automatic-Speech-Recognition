@@ -1,0 +1,6 @@
+beam:
+  _target_: src.decode.CTCBeamSearchDecoder
+  beam_width: 100
+  blank_id: 0
+  beam_threshold: 10.0
+  min_token_logp: -7.0

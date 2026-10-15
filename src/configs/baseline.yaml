@@ -5,7 +5,7 @@ defaults:
   - datasets: example
   - dataloader: example
   - transforms: example_only_instance
-  - decoder: greedy
+  - decoders: greedy
   - _self_
 optimizer:
   _target_: torch.optim.AdamW
