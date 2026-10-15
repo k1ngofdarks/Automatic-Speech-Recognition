@@ -1,3 +1,5 @@
+import heapq
+
 import numpy as np
 import torch
 
@@ -5,10 +7,19 @@ import torch
 class CTCBeamSearchDecoder:
     decoder_name = "Beam"
 
-    def __init__(self, text_encoder, beam_width=100, blank_id=0):
+    def __init__(
+        self,
+        text_encoder,
+        beam_width=100,
+        blank_id=0,
+        beam_threshold=10.0,
+        min_token_logp=-7.0,
+    ):
         self.text_encoder = text_encoder
         self.beam_width = beam_width
         self.blank_id = blank_id
+        self.beam_threshold = beam_threshold
+        self.min_token_logp = min_token_logp
 
     def decode(
         self, log_probs: torch.Tensor, log_probs_lengths: torch.Tensor
@@ -31,12 +42,16 @@ class CTCBeamSearchDecoder:
         Returns:
             list: A list of tuples containing the ranked beam prefixes and their total log probabilities.
         """
-        ranked_beam_prefixes = []
-        for prefix, (log_prob_b, log_prob_nb) in beam_prefixes.items():
-            total_log_prob = np.logaddexp(log_prob_b, log_prob_nb)
-            ranked_beam_prefixes.append((prefix, total_log_prob))
-        ranked_beam_prefixes.sort(key=lambda x: x[1], reverse=True)
-        return ranked_beam_prefixes[: self.beam_width]
+        prefixes = list(beam_prefixes.keys())
+        probs = np.asarray(list(beam_prefixes.values()))
+        scores = np.logaddexp(probs[:, 0], probs[:, 1])
+        cutoff_score = scores.max() - self.beam_threshold
+        condidates = [
+            (prefix, score)
+            for prefix, score in zip(prefixes, scores)
+            if score >= cutoff_score
+        ]
+        return heapq.nlargest(self.beam_width, condidates, key=lambda x: x[1])
 
     def _decode_one(self, log_prob: torch.Tensor, log_prob_length: int) -> str:
         """
@@ -54,15 +69,20 @@ class CTCBeamSearchDecoder:
         beam_prefixes = {
             tuple([]): (0.0, -np.inf)
         }  # {prefix: (log_prob_blank, log_prob_non_blank)}
-        num_classes = log_prob.shape[-1]
 
         for t in range(log_prob_length):
+            frame = log_prob[t]
+            token_ids = np.flatnonzero(frame >= self.min_token_logp)
+            token_ids = np.union1d(
+                token_ids,
+                [self.blank_id, int(frame.argmax())],
+            )
+            tokens = [(int(c), float(frame[c])) for c in token_ids]
+
             new_beam_prefixes = {}
             for prefix, (log_prob_b, log_prob_nb) in list(beam_prefixes.items()):
                 total_log_prob = np.logaddexp(log_prob_b, log_prob_nb)
-                for c in range(num_classes):
-                    p_c = log_prob[t, c]
-
+                for c, p_c in tokens:
                     if c == self.blank_id:
                         new_log_prob_b = total_log_prob + p_c
                         old_log_prob_b, old_log_prob_nb = new_beam_prefixes.get(
