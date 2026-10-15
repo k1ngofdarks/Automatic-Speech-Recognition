@@ -23,7 +23,7 @@ class Inferencer(BaseTrainer):
         device,
         dataloaders,
         text_encoder,
-        decoder,
+        decoders,
         save_path,
         metrics=None,
         batch_transforms=None,
@@ -65,7 +65,7 @@ class Inferencer(BaseTrainer):
         self.batch_transforms = batch_transforms
 
         self.text_encoder = text_encoder
-        self.decoder = decoder
+        self.decoders = decoders
 
         # define dataloaders
         self.evaluation_dataloaders = {k: v for k, v in dataloaders.items()}
@@ -133,16 +133,24 @@ class Inferencer(BaseTrainer):
         outputs = self.model(**batch)
         batch.update(outputs)
 
-        batch["predictions"] = self.decoder.decode(
-            batch["log_probs"], batch["log_probs_length"]
-        )
+        batch["predictions"] = {
+            name: decoder.decode(batch["log_probs"], batch["log_probs_length"])
+            for name, decoder in self.decoders.items()
+        }
 
         if self.save_path is not None:
-            for audio_path, prediction_text in zip(
-                batch["audio_path"], batch["predictions"]
-            ):
-                output_path = self.save_path / part / f"{Path(audio_path).stem}.txt"
-                output_path.write_text(prediction_text)
+            for decoder_key, prediction_texts in batch["predictions"].items():
+                for audio_path, prediction_text in zip(
+                    batch["audio_path"], prediction_texts
+                ):
+                    output_path = (
+                        self.save_path
+                        / part
+                        / decoder_key
+                        / f"{Path(audio_path).stem}.txt"
+                    )
+                    output_path.parent.mkdir(parents=True, exist_ok=True)
+                    output_path.write_text(prediction_text)
 
         if metrics is not None and batch.get("text") is not None:
             for met in self.metrics["inference"]:
