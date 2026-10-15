@@ -4,7 +4,7 @@ import torch
 from torch import Tensor
 
 from src.metrics.base_metric import BaseMetric
-from src.metrics.utils import calc_cer
+from src.metrics.utils import calc_cer, calc_levenshtein_distance
 
 # TODO add beam search/lm versions
 # Note: they can be written in a pretty way
@@ -21,4 +21,23 @@ class ArgmaxCERMetric(BaseMetric):
         for prediction, target in zip(predictions, text):
             target = self.text_encoder.normalize_text(target)
             cers.append(calc_cer(target, prediction))
-        return sum(cers) / len(cers)
+        return {"value": sum(cers) / len(cers)}
+
+
+class CorpusCERMetric(BaseMetric):
+    def __init__(self, text_encoder, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.text_encoder = text_encoder
+
+    def __call__(self, predictions: List[str], text: List[str], **kwargs):
+        total_errors = 0
+        total_chars = 0
+        for prediction, target in zip(predictions, text):
+            target = self.text_encoder.normalize_text(target)
+            distance = calc_levenshtein_distance(target, prediction)
+            total_errors += distance
+            total_chars += len(target)
+        return {
+            "value": total_errors / total_chars if total_chars > 0 else 0,
+            "n": total_chars,
+        }

@@ -76,7 +76,7 @@ class Trainer(BaseTrainer):
             # "predictions" key is used in metrics and inference (logging), so it should be added to the batch
 
         for met in metric_funcs:
-            metrics.update(met.name, met(**batch))
+            metrics.update(met.name, **met(**batch))
         return batch
 
     def _log_batch(self, batch_idx, batch, mode="train"):
