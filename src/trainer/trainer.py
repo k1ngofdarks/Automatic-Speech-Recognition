@@ -116,33 +116,43 @@ class Trainer(BaseTrainer):
         log_probs_length,
         audio_path,
         examples_to_log=10,
-        **batch
+        **batch,
     ):
-        # TODO add beam search
         # Note: by improving text encoder and metrics design
         # this logging can also be improved significantly
 
-        argmax_inds = log_probs.cpu().argmax(-1).numpy()
-        argmax_inds = [
-            inds[: int(ind_len)]
-            for inds, ind_len in zip(argmax_inds, log_probs_length.numpy())
+        argmax_inds = log_probs[:examples_to_log].detach().argmax(-1).cpu().tolist()
+        lengths = log_probs_length[:examples_to_log].detach().cpu().tolist()
+
+        argmax_texts_raw = [
+            self.text_encoder.decode(inds[:length])
+            for inds, length in zip(argmax_inds, lengths)
         ]
-        argmax_texts_raw = [self.text_encoder.decode(inds) for inds in argmax_inds]
-        tuples = list(zip(predictions, text, argmax_texts_raw, audio_path))
 
-        rows = {}
-        for pred, target, raw_pred, audio_path in tuples[:examples_to_log]:
-            target = self.text_encoder.normalize_text(target)
-            wer = calc_wer(target, pred) * 100
-            cer = calc_cer(target, pred) * 100
+        for decoder_key, decoded_texts in predictions.items():
+            rows = {}
 
-            rows[Path(audio_path).name] = {
-                "target": target,
-                "raw prediction": raw_pred,
-                "predictions": pred,
-                "wer": wer,
-                "cer": cer,
-            }
-        self.writer.add_table(
-            "predictions", pd.DataFrame.from_dict(rows, orient="index")
-        )
+            examples = zip(
+                decoded_texts[:examples_to_log],
+                text[:examples_to_log],
+                argmax_texts_raw,
+                audio_path[:examples_to_log],
+            )
+
+            for pred, target, raw_pred, path in examples:
+                target = self.text_encoder.normalize_text(target)
+                wer = calc_wer(target, pred) * 100
+                cer = calc_cer(target, pred) * 100
+
+                rows[Path(path).name] = {
+                    "target": target,
+                    "raw prediction": raw_pred,
+                    "predictions": pred,
+                    "wer": wer,
+                    "cer": cer,
+                }
+
+            self.writer.add_table(
+                f"predictions_{decoder_key}",
+                pd.DataFrame.from_dict(rows, orient="index"),
+            )
