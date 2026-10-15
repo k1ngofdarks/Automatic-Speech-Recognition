@@ -11,7 +11,7 @@ from src.metrics.utils import calc_levenshtein_distance, calc_wer
 # Note 2: overall metric design can be significantly improved
 
 
-class ArgmaxWERMetric(BaseMetric):  # TODO rename to WERMetric
+class WERMetric(BaseMetric):
     def __init__(self, text_encoder, decoder_key, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.text_encoder = text_encoder

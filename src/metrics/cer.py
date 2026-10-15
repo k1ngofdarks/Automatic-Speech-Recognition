@@ -11,7 +11,7 @@ from src.metrics.utils import calc_cer, calc_levenshtein_distance
 # Note 2: overall metric design can be significantly improved
 
 
-class ArgmaxCERMetric(BaseMetric):  # TODO rename to CERMetric
+class CERMetric(BaseMetric):
     def __init__(self, text_encoder, decoder_key, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.text_encoder = text_encoder
