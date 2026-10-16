@@ -1,0 +1,9 @@
+beam_lm:
+  _target_: src.decode.ExternalCTCDecoder
+  kenlm_model_path: data/kenlm/train-all/3gram.arpa
+  lm_uppercase: false
+  alpha: 0.5
+  beta: 1.0
+  beam_width: 100
+  beam_prune_logp: -10.0
+  token_min_logp: -7.0
