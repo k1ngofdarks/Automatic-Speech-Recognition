@@ -1,0 +1,39 @@
+defaults:
+  - fastconformer
+  - override datasets: train_all
+  - override metrics: greedy
+  - override transforms/instance_transforms: spec_augment
+  - _self_
+
+model:
+  conv_channels: 256
+
+dataloader:
+  batch_size: 32
+
+writer:
+  run_name: fastconformer_t960_specaug_finetune15
+  log_checkpoints: true
+
+optimizer:
+  lr: 1.0e-4
+
+lr_scheduler:
+  max_lr: 1.0e-4
+  epochs: 15
+  pct_start: 0.05
+  div_factor: 10
+  final_div_factor: 1
+
+text_encoder:
+  model_file_path: data/tokenizers/train-all/bpe-256/tokenizer.model
+
+trainer:
+  from_pretrained: saved/0/checkpoint-epoch15-263655.pth
+  resume_from: null
+  n_epochs: 15
+  use_amp: true
+  epoch_len: null
+  log_step: 100
+  save_period: 1
+  monitor: "off"
