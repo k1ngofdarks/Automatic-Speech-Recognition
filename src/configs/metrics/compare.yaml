@@ -24,3 +24,15 @@ inference: # metrics that are calculated during inference (eval)
   - _target_: src.metrics.CorpusWERMetric
     name: "WER_Corpus(Beam)"
     decoder_key: beam
+  - _target_: src.metrics.CERMetric
+    name: "CER_(Beam_LM)"
+    decoder_key: beam_lm
+  - _target_: src.metrics.WERMetric
+    name: "WER_(Beam_LM)"
+    decoder_key: beam_lm
+  - _target_: src.metrics.CorpusCERMetric
+    name: "CER_Corpus(Beam_LM)"
+    decoder_key: beam_lm
+  - _target_: src.metrics.CorpusWERMetric
+    name: "WER_Corpus(Beam_LM)"
+    decoder_key: beam_lm
