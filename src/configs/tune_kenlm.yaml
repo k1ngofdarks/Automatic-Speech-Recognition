@@ -1,0 +1,19 @@
+defaults:
+  - inference_fastconformer
+  - override decoders: beam_lm
+  - override metrics: beam_lm
+  - _self_
+
+inferencer:
+  from_pretrained: null
+
+decoders:
+  beam_lm:
+    kenlm_model_path: data/kenlm/4-gram.arpa
+    lm_uppercase: true
+
+tuning:
+  cache_path: data/kenlm/tuning/dev_other.pt
+  storage: sqlite:///data/kenlm/tuning/study.sqlite3
+  study_name: kenlm_dev_other
+  n_trials: 25
