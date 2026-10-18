@@ -1,0 +1,12 @@
+target_dir: ??? # Directory with ground-truth <utterance_id>.txt files.
+prediction_dir: ??? # Directory with predicted <utterance_id>.txt files.
+output_path: null # Optional JSON output path.
+
+metrics:
+  - _target_: src.metrics.CERMetric
+    name: CER
+    decoder_key: saved
+
+  - _target_: src.metrics.WERMetric
+    name: WER
+    decoder_key: saved # we don't use decoder here (this name use in calc_metrics to initialize the metricm don't change it)
