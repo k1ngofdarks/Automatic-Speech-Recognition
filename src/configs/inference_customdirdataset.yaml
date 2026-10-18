@@ -1,0 +1,29 @@
+defaults:
+  - inference_fastconformer
+  - override datasets: customdirdataset
+  - _self_
+
+dataloader:
+  batch_size: 1
+
+inferencer:
+  save_path: fastconformer/custom
+  from_pretrained: ??? # NEED path to model.pth (MUST)
+
+custom_dir: ??? # NEED path to your custom dataset directory like this:
+
+# NameOfTheDirectoryWithUtterances
+# ├── audio
+# │   ├── UtteranceID1.wav # may be flac or mp3
+# │   ├── UtteranceID2.wav
+# │   .
+# │   .
+# │   .
+# │   └── UtteranceIDn.wav
+# └── transcriptions # ground truth, may not exist
+#     ├── UtteranceID1.txt
+#     ├── UtteranceID2.txt
+#     .
+#     .
+#     .
+#     └── UtteranceIDn.txt

@@ -1,0 +1,25 @@
+defaults:
+  - model: fastconformer_baseline
+  - metrics: inference
+  - datasets: all_eval
+  - dataloader: conformer_dataloader
+  - transforms: conformer
+  - decoders: two_decoders # greedy, beam_lm
+  - _self_
+
+model:
+  conv_channels: 256
+
+text_encoder:
+  _target_: src.text_encoder.BPECTCTextEncoder
+  model_file_path: "data/tokenizers/train-all/bpe-256/tokenizer.model"
+
+dataloader:
+  batch_size: 1
+
+inferencer:
+  device_tensors: ["spectrogram"]
+  device: auto
+  save_path: fastconformer/inference
+  seed: 1
+  from_pretrained: ??? # need path to model.pth

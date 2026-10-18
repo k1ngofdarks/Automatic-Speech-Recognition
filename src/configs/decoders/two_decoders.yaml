@@ -1,0 +1,4 @@
+defaults:
+  - greedy
+  - beam_lm
+  - _self_

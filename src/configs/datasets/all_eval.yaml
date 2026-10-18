@@ -1,0 +1,23 @@
+dev_clean:
+  _target_: src.datasets.LibrispeechDataset
+  part: dev-clean
+  target_sr: 16000
+  audio_pipeline: ${transforms.instance_transforms.inference}
+
+dev_other:
+  _target_: src.datasets.LibrispeechDataset
+  part: dev-other
+  target_sr: 16000
+  audio_pipeline: ${transforms.instance_transforms.inference}
+
+test_clean:
+  _target_: src.datasets.LibrispeechDataset
+  part: test-clean
+  target_sr: 16000
+  audio_pipeline: ${transforms.instance_transforms.inference}
+
+test_other:
+  _target_: src.datasets.LibrispeechDataset
+  part: test-other
+  target_sr: 16000
+  audio_pipeline: ${transforms.instance_transforms.inference}
