@@ -1,0 +1,31 @@
+defaults:
+  - fastconformer
+  - override datasets: train_all
+  - override transforms/instance_transforms: spec_augment
+  - _self_
+
+model:
+  conv_channels: 256
+
+dataloader:
+  batch_size: 16
+
+writer:
+  run_name: fastconformer_own_t960_30epochs
+  log_checkpoints: true
+
+lr_scheduler:
+  epochs: 30
+  pct_start: 0.05
+
+text_encoder:
+  model_file_path: data/tokenizers/train-all/bpe-256/tokenizer.model
+
+trainer:
+  from_pretrained: null
+  resume_from: null
+  n_epochs: 30
+  use_amp: true
+  epoch_len: null
+  log_step: 100
+  save_period: 1
