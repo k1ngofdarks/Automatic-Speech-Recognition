@@ -1,7 +1,7 @@
 beam_lm:
   _target_: src.decode.ExternalCTCDecoder
-  kenlm_model_path: data/kenlm/train-all/3gram.arpa
-  lm_uppercase: false
+  kenlm_model_path: data/kenlm/4-gram.arpa
+  lm_uppercase: true
   alpha: 0.5
   beta: 1.0
   beam_width: 100

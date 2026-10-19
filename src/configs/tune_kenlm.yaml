@@ -7,11 +7,6 @@ defaults:
 inferencer:
   from_pretrained: null
 
-decoders:
-  beam_lm:
-    kenlm_model_path: data/kenlm/4-gram.arpa
-    lm_uppercase: true
-
 tuning:
   cache_path: data/kenlm/tuning/dev_other.pt
   storage: sqlite:///data/kenlm/tuning/study.sqlite3
