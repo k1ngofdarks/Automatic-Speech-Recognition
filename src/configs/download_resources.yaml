@@ -1,8 +1,8 @@
 repo_id: k1ngofdarks/dla-asr
 
 resources:
-  - filename: model_test.pth
-    local_dir: saved/test
+  - filename: model.pth
+    local_dir: saved/final
 
   - filename: 4-gram.arpa
     local_dir: data/kenlm
