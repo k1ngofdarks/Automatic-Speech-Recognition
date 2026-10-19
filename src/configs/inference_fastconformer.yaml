@@ -15,7 +15,7 @@ text_encoder:
   model_file_path: "data/tokenizers/train-all/bpe-256/tokenizer.model"
 
 dataloader:
-  batch_size: 1
+  batch_size: 16
 
 inferencer:
   device_tensors: ["spectrogram"]
