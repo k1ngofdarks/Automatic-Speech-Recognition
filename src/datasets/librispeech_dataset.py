@@ -47,7 +47,7 @@ class LibrispeechDataset(BaseDataset):
     def _load_part(self, part):
         arch_path = self._data_dir / f"{part}.tar.gz"
         print(f"Loading part {part}")
-        wget.download(URL_LINKS[part], str(arch_path))
+        wget.download(URL_LINKS[part], str(arch_path), bar=None)
         shutil.unpack_archive(arch_path, self._data_dir)
         for fpath in (self._data_dir / "LibriSpeech").iterdir():
             shutil.move(str(fpath), str(self._data_dir / fpath.name))
