@@ -3,11 +3,6 @@ import re
 import sentencepiece as spm
 import torch
 
-# TODO add LM, Beam Search support
-# Note: think about metrics and encoder
-# The design can be remarkably improved
-# to calculate stuff more efficiently and prettier
-
 
 class BPECTCTextEncoder:
     EMPTY_TOK = ""

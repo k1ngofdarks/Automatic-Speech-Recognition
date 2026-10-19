@@ -124,9 +124,6 @@ class Inferencer(BaseTrainer):
                 the dataloader (possibly transformed via batch transform)
                 and model outputs.
         """
-        # TODO change inference logic so it suits ASR assignment
-        # and task pipeline
-
         batch = self.move_batch_to_device(batch)
         batch = self.transform_batch(batch)  # transform batch on device -- faster
 
