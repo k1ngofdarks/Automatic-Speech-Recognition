@@ -6,3 +6,6 @@ resources:
 
   - filename: 4-gram.arpa
     local_dir: data/kenlm
+
+  - filename: info.log
+    local_dir: saved/final
