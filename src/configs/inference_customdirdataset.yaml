@@ -4,7 +4,7 @@ defaults:
   - _self_
 
 dataloader:
-  batch_size: 16
+  batch_size: 1
 
 inferencer:
   save_path: fastconformer/custom
