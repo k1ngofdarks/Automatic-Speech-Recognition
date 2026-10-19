@@ -1,10 +1,10 @@
 defaults:
   - model: conformer_baseline
-  - metrics: example
-  - datasets: other_eval
+  - metrics: inference
+  - datasets: all_eval
   - dataloader: conformer_dataloader
   - transforms: conformer
-  - decoders: greedy
+  - decoders: two_decoders
   - _self_
 
 text_encoder:
@@ -16,6 +16,6 @@ dataloader:
 inferencer:
   device_tensors: ["spectrogram"]
   device: auto
-  save_path: "path/to/save/inference/results"
+  save_path: ??? # Required: output directory, relative to data/saved/ or absolute.
   seed: 1
-  from_pretrained: paths/to/your/pretrained/model.pth
+  from_pretrained: ??? # Required: checkpoint path matching the model and text encoder.

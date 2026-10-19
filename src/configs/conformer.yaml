@@ -1,7 +1,7 @@
 defaults:
   - model: conformer_baseline
   - writer: cometml
-  - metrics: example
+  - metrics: train
   - datasets: train_clean_100
   - dataloader: conformer_dataloader
   - transforms: conformer
